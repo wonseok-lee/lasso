@@ -100,7 +100,6 @@ def admm(X,y,beta,lamda, iter_num,lr):
     return loss, beta_old
 
 X=(X-np.mean(X,0))/np.std(X,0)
-y=(y-np.mean(y,0))/np.std(y,0)
 n,k=X.shape
 beta=np.ones((k,1))
 lamda=10
@@ -115,11 +114,3 @@ loss_admm, _ = admm(X, y, beta, lamda, iter_num, lr)
 print(len(loss_proximal))
 print(len(loss_acc_proximal))
 print(len(loss_admm))
-
-
-
-
-
-
-
-
