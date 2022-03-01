@@ -6,7 +6,7 @@ X=diabetes.data
 y=diabetes.target.reshape(-1,1)
 
 def f_x(X,beta,y):
-    return 1/2*np.linalg.norm(y-np.matmul(X, beta)) ** 2
+    return 1/2*(np.linalg.norm(y-np.matmul(X, beta)) ** 2)
 
 def objective_function(X, beta, y, lamda):
     return f_x(X,beta,y)+lamda*np.sum(np.abs(beta))
@@ -17,7 +17,7 @@ def grad_f(X, y, beta):
     return XtX_beta-Xt_y
 
 def upperbound(X,y,beta_new,beta_old,lamda):
-    return f_x(X,beta_new,y) <= f_x(X,beta_old,y)+np.matmul(grad_f(X,y,beta_old).T,beta_new-beta_old)+1/2*lamda*(np.linalg.norm(beta_new-beta_old)**2)
+    return f_x(X,beta_new,y) <= f_x(X,beta_old,y)+np.matmul(grad_f(X,y,beta_old).T,(beta_new-beta_old))+1/(2*lamda)*(np.linalg.norm(beta_new-beta_old)**2)
 
 def soft_threshold_multi(X, rho):
     '''
@@ -38,7 +38,7 @@ def proximal_descent(X, y, beta, lamda, iter_num, lr):
     for j in range(iter_num):
         while True:
             beta_new = soft_threshold_multi(beta_old - lr * grad_f(X, y, beta_old), lr * lamda)
-            if upperbound(X, y, beta_new, beta_old, lr):
+            if upperbound(X, y, beta_new, beta_old, 1):
                 break
             else:
                 lr = r * lr
@@ -62,7 +62,7 @@ def acc_proximal_descent(X, y, beta, lamda, iter_num, lr):
             beta_old = beta_old + (j - 2) / (j + 1) * (beta_new - beta_old)
         while True:
             beta_new = soft_threshold_multi(beta_old - lr * grad_f(X, y, beta_old), lr * lamda)
-            if upperbound(X, y, beta_new, beta_old, lr):
+            if upperbound(X, y, beta_new, beta_old, 1):
                 break
             else:
                 lr = r * lr
@@ -83,8 +83,9 @@ def admm(X,y,beta,lamda, iter_num,lr):
     omega_old = np.matrix(np.random.randn(k, 1))
 
     for j in range(iter_num):
-        beta_new = f_admm(X, y, lr, alpha_old, omega_old)
-        alpha_new=soft_threshold_multi(beta_new+omega_old,lamda/lr)
+        beta_new = np.linalg.inv(np.eye(k)+lr*np.matmul(X.T, X)).dot(lr*(alpha_old-omega_old)+np.matmul(X.T,y))
+        # f_admm(X, y, lr, alpha_old, omega_old)
+        alpha_new=soft_threshold_multi(beta_new+omega_old,lamda*lr)
         omega_new=omega_old+beta_new-alpha_old
 
         obj_val = objective_function(X, beta_new, y, lamda)
@@ -114,3 +115,6 @@ loss_admm, _ = admm(X, y, beta, lamda, iter_num, lr)
 print(len(loss_proximal))
 print(len(loss_acc_proximal))
 print(len(loss_admm))
+
+print(loss_proximal)
+print(loss_admm)
