@@ -79,8 +79,8 @@ def admm(X,y,beta,lamda, iter_num,lr):
     _,k=X.shape
     beta_old = beta
     loss = []
-    alpha_old = np.matrix(np.random.randn(k, 1))
-    omega_old = np.matrix(np.random.randn(k, 1))
+    alpha_old = np.zeros((k, 1))
+    omega_old = np.zeros((k, 1))
 
     for j in range(iter_num):
         beta_new = np.linalg.inv(np.eye(k)+lr*np.matmul(X.T, X)).dot(lr*(alpha_old-omega_old)+np.matmul(X.T,y))
@@ -103,10 +103,10 @@ def admm(X,y,beta,lamda, iter_num,lr):
 X=(X-np.mean(X,0))/np.std(X,0)
 n,k=X.shape
 beta=np.ones((k,1))
-lamda=10
+lamda=1000
 iter_num=100
 loss=[]
-lr=1e-2
+lr=0.1
 r=0.5
 loss_proximal, _ = proximal_descent(X, y, beta, lamda, iter_num, lr)
 loss_acc_proximal, _ = acc_proximal_descent(X, y, beta, lamda, iter_num, lr)
@@ -117,4 +117,5 @@ print(len(loss_acc_proximal))
 print(len(loss_admm))
 
 print(loss_proximal)
+print(loss_acc_proximal)
 print(loss_admm)
