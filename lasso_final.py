@@ -34,21 +34,20 @@ def acc_proximal(X,beta,y,lamda,iter_num):
     loss = []
     c = np.linalg.norm(X) ** 2
     t = time.time()
-    beta_old = beta
-    beta_new = beta_old
     for j in range(1,iter_num+1):
         if j > 1:
-            v = beta_new + (j - 2) / (j + 1) * (beta_new - beta_old)
+            v = beta + (j - 2) / (j + 1) * (beta - beta_old)
+            temp_beta = v - lamda * np.matmul(X.T, (X.dot(v) - y))
+            beta_new = soft_threshold(temp_beta / c, lamda / c)
+            loss_temp = objective_function(X, beta_new, y, lamda)
+            loss.append(loss_temp)
+            beta = beta_new
         else:
-            v = beta_old
-        temp_beta = v - lamda * np.matmul(X.T, (X.dot(v) - y))
-        beta_new = soft_threshold(temp_beta / c, lamda / c)
-        loss_temp = objective_function(X, beta_new, y, lamda)
-        loss.append(loss_temp)
-        if j > 1:
-            beta_old=v
-        else:
-            beta_old=beta_new
+            temp_beta = beta - lamda * np.matmul(X.T, (X.dot(beta) - y))
+            beta = soft_threshold(temp_beta / c, lamda / c)
+            loss_temp = objective_function(X, beta, y, lamda)
+            loss.append(loss_temp)
+            beta_old = beta.copy()
     t -= time.time()
     return loss
 
