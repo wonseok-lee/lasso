@@ -30,7 +30,7 @@ def proximal(X,beta,y,lamda,iter_num):
     t-=time.time()
     return loss
 
-def acc_proximal(X,beta,y,lamda,iter_num):
+def acc_proximal1(X,beta,y,lamda,iter_num):
     loss = []
     c = np.linalg.norm(X) ** 2
     t = time.time()
@@ -41,13 +41,31 @@ def acc_proximal(X,beta,y,lamda,iter_num):
             beta_new = soft_threshold(temp_beta / c, lamda / c)
             loss_temp = objective_function(X, beta_new, y, lamda)
             loss.append(loss_temp)
-            beta = beta_new
+            beta, beta_old = beta_new, beta
         else:
             temp_beta = beta - lamda * np.matmul(X.T, (X.dot(beta) - y))
             beta = soft_threshold(temp_beta / c, lamda / c)
             loss_temp = objective_function(X, beta, y, lamda)
             loss.append(loss_temp)
-            beta_old = beta.copy()
+            beta_old = beta
+    t -= time.time()
+    return loss
+
+def acc_proximal2(X,beta,y,lamda,iter_num):
+    loss = []
+    c = np.linalg.norm(X) ** 2
+    t = time.time()
+    k = 1
+    v = beta
+    for j in range(1,iter_num+1):
+        beta_old = beta
+        temp_beta = v - lamda * np.matmul(X.T, (X.dot(v) - y))
+        beta = soft_threshold(temp_beta / c, lamda / c)
+        k0=k
+        k = (1 + np.sqrt(1 + 4*(k**2)))/2
+        v = beta + ((k0 - 1)/k)*(beta - beta_old)
+        loss_temp = objective_function(X, beta, y, lamda)
+        loss.append(loss_temp)
     t -= time.time()
     return loss
 
@@ -55,13 +73,15 @@ def acc_proximal(X,beta,y,lamda,iter_num):
 n,k=X.shape
 X=(X-np.mean(X,0))/np.std(X,0)
 beta=np.ones((k,1))
-loss=proximal(X,beta,y,0.5,100)
-print(loss)
-loss=acc_proximal(X,beta,y,0.5,100)
-print(loss)
+loss1=proximal(X,beta,y,0.5,100)
+print(loss1)
+loss2=acc_proximal1(X,beta,y,0.5,100)
+print(loss2)
+loss3=acc_proximal2(X,beta,y,0.5,100)
+print(loss3)
 # X.T.dot(X.dot(beta)-y)
 
-
+print(np.asarray(loss2)-np.asarray(loss3))
 
 
 
