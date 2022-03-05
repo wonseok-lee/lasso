@@ -1,22 +1,6 @@
 import time
-from sklearn import datasets
 import numpy as np
-
-class Record:
-    def __init__(self):
-        self.obj = []
-        self.loss = []
-        self.time = []
-
-    def add_obj(self, val):
-        self.obj.append(val)
-
-    def add_loss(self, val):
-        self.loss.append(val)
-
-    def add_time(self, val):
-        self.time.append(val)
-
+from util import Record
 
 def soft_threshold(X, rho):
     '''
@@ -37,7 +21,7 @@ def objective_function(X, beta, y, lamda):
     '''
     return 1/2*np.linalg.norm(X.dot(beta)-y)**2+lamda*np.linalg.norm(beta,1)
 
-def coordinate_descent(X, beta, y, lamda, iter_num):
+def coordinate(X, beta, y, lamda, iter_num):
     '''
     coordinate descent for lasso regression (L2 penalized Regression)
 
@@ -48,6 +32,7 @@ def coordinate_descent(X, beta, y, lamda, iter_num):
     :param iter_num: iteration number to infer beta
     :return: lists including time, objective value, MSE(loss)
     '''
+    # X = X / (np.linalg.norm(X))
     _, k = X.shape
     record = Record()
     t = time.time()
@@ -56,17 +41,17 @@ def coordinate_descent(X, beta, y, lamda, iter_num):
         # update beta
         for j in range(k):
             X_j = X[:, j].reshape(-1, 1)
-            y_pred = np.matmul(X, beta)
+            y_pred = X.dot(beta)
             beta_j = beta[j]
-            rho = np.matmul(X_j.T,(y-y_pred+beta_j*X_j))
-            beta[j] = soft_threshold(rho, lamda)
+            temp = np.matmul(X_j.T, (y - y_pred + beta_j * X_j))
+            beta[j] = soft_threshold(temp, lamda)
 
         obj_temp = objective_function(X, beta, y, lamda)
         loss_temp = np.linalg.norm(y - X.dot(beta)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
 
-    t -= time.time()
+    t = time.time() - t
     record.add_time(t)
     return record
 
@@ -95,7 +80,7 @@ def proximal(X,beta,y,lamda,iter_num):
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
         beta = beta_new
-    t -= time.time()
+    t = time.time() - t
     record.add_time(t)
     return record
 
@@ -134,12 +119,12 @@ def acc_proximal1(X,beta,y,lamda,iter_num):
             # update beta
             beta = soft_threshold(temp_beta / c, lamda / c)
 
-            obj_temp = objective_function(X, beta_new, y, lamda)
-            loss_temp = np.linalg.norm(y - X.dot(beta_new)) ** 2
+            obj_temp = objective_function(X, beta, y, lamda)
+            loss_temp = np.linalg.norm(y - X.dot(beta)) ** 2
             record.add_obj(obj_temp)
             record.add_loss(loss_temp)
             beta_old = beta
-    t -= time.time()
+    t = time.time() - t
     record.add_time(t)
     return record
 
@@ -176,11 +161,11 @@ def acc_proximal2(X,beta,y,lamda,iter_num):
         loss_temp = np.linalg.norm(y - X.dot(beta)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-    t -= time.time()
+    t = time.time() - t
     record.add_time(t)
     return record
 
-def admm(X,y,lamda,iter_num):
+def admm(X,y,lamda,rho,iter_num):
     '''
     ADMM for lasso regression (L2 penalized Regression)
 
@@ -191,15 +176,16 @@ def admm(X,y,lamda,iter_num):
     :return: lists including time, objective value, MSE(loss)
     '''
     n, k = X.shape
-    alpha = np.ones((k,1))
+    alpha = np.ones((k, 1))
     omega = np.ones((k, 1))
     c = np.linalg.norm(X) ** 2
     t = time.time()
     record = Record()
     for j in range(iter_num):
+
         # update beta, alpha, omega
-        beta_new = np.linalg.inv(X.T.dot(X)+c*np.eye(k)).dot(X.T.dot(y) + c*(alpha-omega))
-        alpha_new = soft_threshold(beta_new+omega,lamda/c)
+        beta_new = (np.linalg.inv(X.T.dot(X) + rho * np.eye(k))).dot(X.T.dot(y) + rho * (alpha-omega))
+        alpha_new = soft_threshold(beta_new + omega,lamda/c)
         omega_new = omega + beta_new - alpha_new
 
         obj_temp = objective_function(X, beta_new, y, lamda)
@@ -208,25 +194,10 @@ def admm(X,y,lamda,iter_num):
         record.add_loss(loss_temp)
 
         beta, alpha, omega = beta_new, alpha_new, omega_new
-    t -= time.time()
+    t = time.time() - t
     record.add_time(t)
     return record
 
-
-diabetes = datasets.load_diabetes()
-X=diabetes.data
-y=diabetes.target.reshape(-1,1)
-
-n,k=X.shape
-X=(X-np.mean(X,0))/np.std(X,0)
-beta=np.ones((k,1))
-loss1=proximal(X,beta,y,0.5,100)
-print(loss1)
-# loss2=acc_proximal1(X,beta,y,0.5,100)
-# print(loss2)
-loss3=admm(X,y,0.5,100)
-print(loss3)
-# X.T.dot(X.dot(beta)-y)
 
 
 
