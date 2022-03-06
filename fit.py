@@ -52,7 +52,7 @@ def coordinate(X, y, lamda, iter_num):
         loss_temp = np.linalg.norm(y - X.dot(beta)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-        record.add_beta(beta)
+        # record.add_beta(beta)
 
     t = time.time() - t
     record.add_time(t)
@@ -84,7 +84,7 @@ def proximal(X,y,lamda,iter_num):
         loss_temp = np.linalg.norm(y-X.dot(beta)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-        record.add_beta(beta)
+        # record.add_beta(beta)
     t = time.time() - t
     record.add_time(t)
     return record
@@ -120,7 +120,7 @@ def acc_proximal1(X,y,lamda,iter_num):
         loss_temp = np.linalg.norm(y - X.dot(beta_new)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-        record.add_beta(beta)
+        # record.add_beta(beta)
         beta, beta_old = beta_new, beta
     t = time.time() - t
     record.add_time(t)
@@ -162,7 +162,7 @@ def acc_proximal2(X,y,lamda,iter_num):
         loss_temp = np.linalg.norm(y - X.dot(beta)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-        record.add_beta(beta)
+        # record.add_beta(beta)
 
     t = time.time() - t
     record.add_time(t)
@@ -197,14 +197,9 @@ def admm(X,y,lamda,rho,iter_num):
         loss_temp = np.linalg.norm(y - X.dot(beta_new)) ** 2
         record.add_obj(obj_temp)
         record.add_loss(loss_temp)
-        record.add_beta(beta)
+        # record.add_beta(beta)
 
         beta, alpha, omega = beta_new, alpha_new, omega_new
     t = time.time() - t
     record.add_time(t)
     return record
-
-
-
-
-
