@@ -3,6 +3,7 @@ class Record:
         self.obj = []
         self.loss = []
         self.time = []
+        self.beta = []
 
     def add_obj(self, val):
         self.obj.append(val)
@@ -13,5 +14,9 @@ class Record:
     def add_time(self, val):
         self.time.append(val)
 
+    def add_beta(self, val):
+        self.beta.append(val)
+
     def get_time(self):
         return self.time[0]
+
